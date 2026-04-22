@@ -200,6 +200,8 @@
     "chargesVariables": "التكاليف المتغيرة",
     "chargesFixesTotal": "إجمالي التكاليف الثابتة",
     "poidsMoyen": "متوسط الوزن / عنقود",
+    "revenusNetFinal": "الإيراد الصافي النهائي",
+    "revenusNetFinalHint": "البيع الخام − نسبة التكاليف − كل التكاليف الثابتة",
     "repartition": "التوزيع على البيوت المحمية",
     "aucune": "لا توجد مبيعات مسجلة",
     "regimes": "عنقود",
@@ -231,6 +233,8 @@
   "indicateurs": {
     "total_depenses": "إجمالي المصاريف",
     "total_ventes": "المبيعات الصافية",
+    "tonnage_brut_total": "إجمالي الوزن الخام",
+    "poids_moyen_global": "متوسط الوزن / عنقود",
     "balance": "الرصيد",
     "roi": "العائد على الاستثمار",
     "nombre_actions": "عدد التدخلات",

@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { TrendingDown, ShoppingCart, Warehouse, Store, Zap, Leaf } from 'lucide-react'
+import { TrendingDown, ShoppingCart, Warehouse, Store, Zap, Leaf, Weight, Scale } from 'lucide-react'
 import { db } from '@/db/database'
 import { calculerIndicateursGlobaux } from '@/utils/calculs'
-import { formatMAD, formatROI, formatDateShort } from '@/utils/formatters'
+import { formatMAD, formatROI, formatKg, formatDateShort } from '@/utils/formatters'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { StatCard } from '@/components/ui/StatCard'
 import { Card } from '@/components/ui/Card'
@@ -86,6 +86,18 @@ export function Dashboard() {
           value={formatROI(indicateurs.roi)}
           icon={<span className="text-base">%</span>}
           color={roiColor}
+        />
+        <StatCard
+          label={t('indicateurs.tonnage_brut_total')}
+          value={formatKg(indicateurs.tonnageBrutTotal)}
+          icon={<Weight size={18} />}
+          color="blue"
+        />
+        <StatCard
+          label={t('indicateurs.poids_moyen_global')}
+          value={indicateurs.poidsMoyenGlobal > 0 ? formatKg(indicateurs.poidsMoyenGlobal) : '—'}
+          icon={<Scale size={18} />}
+          color="yellow"
         />
       </div>
 

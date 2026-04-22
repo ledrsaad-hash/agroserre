@@ -200,6 +200,8 @@
     "chargesVariables": "Charges variables",
     "chargesFixesTotal": "Charges fixes total",
     "poidsMoyen": "Poids moyen / régime",
+    "revenusNetFinal": "Revenu net final",
+    "revenusNetFinalHint": "Vente brute − charges % − toutes charges fixes",
     "repartition": "Répartition par serre",
     "aucune": "Aucune vente enregistrée",
     "regimes": "régimes",
@@ -231,6 +233,8 @@
   "indicateurs": {
     "total_depenses": "Dépenses totales",
     "total_ventes": "Ventes nettes",
+    "tonnage_brut_total": "Tonnage brut total",
+    "poids_moyen_global": "Poids moyen / régime",
     "balance": "Balance",
     "roi": "ROI",
     "nombre_actions": "Nb. actions",

@@ -31,6 +31,7 @@ export function calculerVente(vente: Vente): VenteCalculee {
     chargesVariables,
     chargesFixesTotal,
     coutVenteTotal,
+    revenusNetFinal: totalNet - chargesFixesTotal,
     poidsMoyenParRegime,
     poidsMoyenNetParRegime,
   }
@@ -116,6 +117,11 @@ export function calculerIndicateursGlobaux(
     parCategorie[d.categorie] = (parCategorie[d.categorie] ?? 0) + d.montant
   }
 
+  const tonnageBrutTotal = parSerre.reduce((s, i) => s + i.tonnageBrutTotal, 0)
+  const tonnageNetTotal  = parSerre.reduce((s, i) => s + i.tonnageNetTotal, 0)
+  const totalRegimes     = parSerre.reduce((s, i) => s + i.totalRegimes, 0)
+  const poidsMoyenGlobal = totalRegimes > 0 ? tonnageBrutTotal / totalRegimes : 0
+
   return {
     totalDepenses,
     totalVentesNettes,
@@ -124,5 +130,9 @@ export function calculerIndicateursGlobaux(
     parCategorie,
     parSerre,
     nombreSerres: serres.length,
+    tonnageBrutTotal,
+    tonnageNetTotal,
+    totalRegimes,
+    poidsMoyenGlobal,
   }
 }

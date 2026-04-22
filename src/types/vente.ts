@@ -41,6 +41,7 @@ export interface VenteCalculee {
   chargesVariables: number
   chargesFixesTotal: number
   coutVenteTotal: number
+  revenusNetFinal: number
   poidsMoyenParRegime: number
   poidsMoyenNetParRegime: number
 }

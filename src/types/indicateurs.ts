@@ -22,4 +22,8 @@ export interface IndicateursGlobaux {
   parCategorie: Partial<Record<CategorieDepense, number>>
   parSerre: IndicateursSerre[]
   nombreSerres: number
+  tonnageBrutTotal: number
+  tonnageNetTotal: number
+  totalRegimes: number
+  poidsMoyenGlobal: number
 }

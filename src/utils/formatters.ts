@@ -3,20 +3,20 @@ import { fr, arMA } from 'date-fns/locale'
 
 export function formatMAD(amount: number): string {
   return new Intl.NumberFormat('fr-MA', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount) + ' MAD'
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount)) + ' MAD'
 }
 
-export function formatNumber(n: number, decimals = 2): string {
+export function formatNumber(n: number, decimals = 0): string {
   return new Intl.NumberFormat('fr-MA', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(n)
+  }).format(decimals === 0 ? Math.round(n) : n)
 }
 
 export function formatKg(kg: number): string {
-  return formatNumber(kg, 1) + ' kg'
+  return formatNumber(kg, 0) + ' kg'
 }
 
 export function formatROI(roi: number | null): string {
