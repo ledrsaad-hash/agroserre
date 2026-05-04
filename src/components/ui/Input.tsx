@@ -1,12 +1,12 @@
 import { forwardRef, type InputHTMLAttributes } from 'react'
 import { cn } from '@/utils/cn'
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix' | 'suffix'> {
   label?: string
   error?: string
   hint?: string
-  suffix?: string
-  prefix?: string
+  suffix?: React.ReactNode
+  prefix?: React.ReactNode
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(

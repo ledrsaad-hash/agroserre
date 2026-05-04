@@ -2,10 +2,11 @@ import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, Warehouse, TrendingDown, Leaf,
-  Zap, ShoppingCart, Store, BarChart3
+  Zap, ShoppingCart, Store, BarChart3, Settings
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { UserMenu } from '@/components/auth/UserMenu'
 
 const navItems = [
   { to: '/',         icon: LayoutDashboard, key: 'dashboard' },
@@ -15,7 +16,8 @@ const navItems = [
   { to: '/intrants', icon: Leaf,            key: 'intrants' },
   { to: '/ventes',   icon: ShoppingCart,    key: 'ventes' },
   { to: '/marche',   icon: Store,           key: 'marche' },
-  { to: '/rapports', icon: BarChart3,       key: 'rapports' },
+  { to: '/rapports',   icon: BarChart3,  key: 'rapports' },
+  { to: '/parametres', icon: Settings,   key: 'parametres' },
 ]
 
 export function Sidebar() {
@@ -51,7 +53,8 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="px-5 py-4 border-t border-gray-100">
+      <div className="px-3 py-4 border-t border-gray-100 space-y-2">
+        <UserMenu />
         <LanguageSwitcher className="w-full" />
       </div>
     </aside>
