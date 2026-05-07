@@ -17,7 +17,7 @@ export const serreService = {
   async create(data: SerreFormData): Promise<Serre> {
     const serre: Serre = { ...data, id: nanoid(), createdAt: now(), updatedAt: now() }
     await db.serres.add(serre)
-    remoteUpsert('serres', serre as unknown as Record<string, unknown>)
+    await remoteUpsert('serres', serre as unknown as Record<string, unknown>)
     return serre
   },
 
@@ -25,7 +25,7 @@ export const serreService = {
     const updatedAt = now()
     await db.serres.update(id, { ...data, updatedAt })
     const full = await db.serres.get(id)
-    if (full) remoteUpsert('serres', full as unknown as Record<string, unknown>)
+    if (full) await remoteUpsert('serres', full as unknown as Record<string, unknown>)
   },
 
   async delete(id: string): Promise<void> {
@@ -35,6 +35,6 @@ export const serreService = {
       await db.actions.where('serreId').equals(id).delete()
       await db.intrants.where('serreId').equals(id).delete()
     })
-    remoteDelete('serres', id)
+    await remoteDelete('serres', id)
   },
 }

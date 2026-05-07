@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { TopBar } from './TopBar'
+import { SyncErrorBanner } from '@/components/ui/SyncErrorBanner'
 
 export function AppShell() {
   return (
@@ -14,6 +15,7 @@ export function AppShell() {
         </main>
       </div>
       <BottomNav />
+      <SyncErrorBanner />
     </div>
   )
 }

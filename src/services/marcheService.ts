@@ -17,12 +17,12 @@ export const marcheService = {
   async create(data: PrixMarcheFormData): Promise<PrixMarche> {
     const prix: PrixMarche = { ...data, id: nanoid(), createdAt: now() }
     await db.prixMarche.add(prix)
-    remoteUpsert('prix_marche', prix as unknown as Record<string, unknown>)
+    await remoteUpsert('prix_marche', prix as unknown as Record<string, unknown>)
     return prix
   },
 
   async delete(id: string): Promise<void> {
     await db.prixMarche.delete(id)
-    remoteDelete('prix_marche', id)
+    await remoteDelete('prix_marche', id)
   },
 }
