@@ -5,6 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Pencil, Trash2 } from 'lucide-react'
 import { db } from '@/db/database'
 import { venteService } from '@/services/venteService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { calculerVente } from '@/utils/calculs'
 import { formatKg, formatDateShort } from '@/utils/formatters'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -34,13 +35,22 @@ export function VenteDetail() {
     .join(', ')
 
   const handleEdit = async (data: VenteFormData) => {
-    await venteService.update(vente.id, data)
-    setEditOpen(false)
+    try {
+      await venteService.update(vente.id, data)
+      setEditOpen(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
   }
 
   const handleDelete = async () => {
-    await venteService.delete(vente.id)
-    navigate('/ventes')
+    try {
+      await venteService.delete(vente.id)
+      navigate('/ventes')
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+      setDeleteOpen(false)
+    }
   }
 
   return (

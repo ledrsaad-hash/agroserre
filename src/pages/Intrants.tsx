@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
 import { db } from '@/db/database'
 import { intrantService } from '@/services/intrantService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { IntrantItem } from '@/components/intrant/IntrantItem'
 import { IntrantForm } from '@/components/intrant/IntrantForm'
@@ -28,14 +29,33 @@ export function Intrants() {
   const totalCout = filtered.reduce((s, i) => s + i.cout, 0)
 
   const handleCreate = async (data: IntrantFormData) => {
-    await intrantService.create(data)
-    setOpen(false)
+    try {
+      await intrantService.create(data)
+      setOpen(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
   }
 
   const handleEdit = async (data: IntrantFormData) => {
     if (!editItem) return
-    await intrantService.update(editItem.id, data)
-    setEditItem(null)
+    try {
+      await intrantService.update(editItem.id, data)
+      setEditItem(null)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await intrantService.delete(deleteId)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    } finally {
+      setDeleteId(null)
+    }
   }
 
   return (
@@ -58,10 +78,7 @@ export function Intrants() {
       ) : (
         <div className="space-y-3">
           {filtered.map(i => (
-            <IntrantItem key={i.id} intrant={i}
-              onEdit={() => setEditItem(i)}
-              onDelete={() => setDeleteId(i.id)}
-            />
+            <IntrantItem key={i.id} intrant={i} onEdit={() => setEditItem(i)} onDelete={() => setDeleteId(i.id)} />
           ))}
         </div>
       )}
@@ -72,9 +89,7 @@ export function Intrants() {
       <Modal open={!!editItem} onClose={() => setEditItem(null)} title={t('intrant.modifier')}>
         {editItem && <IntrantForm initial={editItem} onSubmit={handleEdit} onCancel={() => setEditItem(null)} />}
       </Modal>
-      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)}
-        onConfirm={async () => { if (deleteId) await intrantService.delete(deleteId); setDeleteId(null) }}
-      />
+      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} />
     </div>
   )
 }

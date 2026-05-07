@@ -8,6 +8,7 @@ import { serreService } from '@/services/serreService'
 import { depenseService } from '@/services/depenseService'
 import { actionService } from '@/services/actionService'
 import { intrantService } from '@/services/intrantService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { calculerIndicateursSerre } from '@/utils/calculs'
 import { formatMAD, formatROI } from '@/utils/formatters'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -26,9 +27,9 @@ import { IntrantForm } from '@/components/intrant/IntrantForm'
 import { VenteCard } from '@/components/vente/VenteCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { SerreFormData } from '@/types/serre'
-import type { Depense } from '@/types/depense'
-import type { Action } from '@/types/action'
-import type { Intrant } from '@/types/intrant'
+import type { Depense, DepenseFormData } from '@/types/depense'
+import type { Action, ActionFormData } from '@/types/action'
+import type { Intrant, IntrantFormData } from '@/types/intrant'
 import type { Vente } from '@/types/vente'
 
 type Tab = 'infos' | 'depenses' | 'actions' | 'intrants' | 'ventes'
@@ -63,14 +64,98 @@ export function SerreDetail() {
 
   const indicateurs = calculerIndicateursSerre(serre, depenses, [], allVentes)
 
+  // --- Serre handlers ---
   const handleEdit = async (data: SerreFormData) => {
-    await serreService.update(serre.id, data)
-    setEditOpen(false)
+    try {
+      await serreService.update(serre.id, data)
+      setEditOpen(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
   }
 
   const handleDelete = async () => {
-    await serreService.delete(serre.id)
-    navigate('/serres')
+    try {
+      await serreService.delete(serre.id)
+      navigate('/serres')
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+      setDeleteOpen(false)
+    }
+  }
+
+  // --- Dépense handlers ---
+  const handleAddDepense = async (data: DepenseFormData) => {
+    try {
+      await depenseService.create(data)
+      setAddDepense(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
+  }
+
+  const handleEditDepense = async (data: DepenseFormData) => {
+    if (!editDepense) return
+    try {
+      await depenseService.update(editDepense.id, data)
+      setEditDepense(null)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
+  }
+
+  // --- Action handlers ---
+  const handleAddAction = async (data: ActionFormData) => {
+    try {
+      await actionService.create(data)
+      setAddAction(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
+  }
+
+  const handleEditAction = async (data: ActionFormData) => {
+    if (!editAction) return
+    try {
+      await actionService.update(editAction.id, data)
+      setEditAction(null)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
+  }
+
+  // --- Intrant handlers ---
+  const handleAddIntrant = async (data: IntrantFormData) => {
+    try {
+      await intrantService.create(data)
+      setAddIntrant(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
+  }
+
+  const handleEditIntrant = async (data: IntrantFormData) => {
+    if (!editIntrant) return
+    try {
+      await intrantService.update(editIntrant.id, data)
+      setEditIntrant(null)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
+  }
+
+  // --- Delete cible (dépense/action/intrant) ---
+  const handleDeleteTarget = async () => {
+    if (!deleteTarget) return
+    try {
+      if (deleteTarget.type === 'depense') await depenseService.delete(deleteTarget.id)
+      if (deleteTarget.type === 'action') await actionService.delete(deleteTarget.id)
+      if (deleteTarget.type === 'intrant') await intrantService.delete(deleteTarget.id)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    } finally {
+      setDeleteTarget(null)
+    }
   }
 
   const tabs: { key: Tab; label: string }[] = [
@@ -125,20 +210,17 @@ export function SerreDetail() {
             <div className="space-y-3">
               {serre.localisation && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin size={16} className="text-gray-400" />
-                  {serre.localisation}
+                  <MapPin size={16} className="text-gray-400" />{serre.localisation}
                 </div>
               )}
               {serre.superficie && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Layers size={16} className="text-gray-400" />
-                  {serre.superficie} {t('serre.m2')}
+                  <Layers size={16} className="text-gray-400" />{serre.superficie} {t('serre.m2')}
                 </div>
               )}
               {serre.nombrePlants && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <TreePine size={16} className="text-gray-400" />
-                  {serre.nombrePlants} {t('serre.plants')}
+                  <TreePine size={16} className="text-gray-400" />{serre.nombrePlants} {t('serre.plants')}
                 </div>
               )}
               {serre.notes && <p className="text-sm text-gray-500 pt-1 border-t border-gray-100">{serre.notes}</p>}
@@ -199,65 +281,28 @@ export function SerreDetail() {
       </Modal>
 
       <Modal open={addDepense} onClose={() => setAddDepense(false)} title={t('depense.ajouter')}>
-        <DepenseForm defaultSerreId={serre.id}
-          onSubmit={async (data) => { await depenseService.create(data); setAddDepense(false) }}
-          onCancel={() => setAddDepense(false)}
-        />
+        <DepenseForm defaultSerreId={serre.id} onSubmit={handleAddDepense} onCancel={() => setAddDepense(false)} />
       </Modal>
-
       <Modal open={!!editDepense} onClose={() => setEditDepense(null)} title={t('depense.modifier')}>
-        {editDepense && <DepenseForm initial={editDepense}
-          onSubmit={async (data) => { await depenseService.update(editDepense.id, data); setEditDepense(null) }}
-          onCancel={() => setEditDepense(null)}
-        />}
+        {editDepense && <DepenseForm initial={editDepense} onSubmit={handleEditDepense} onCancel={() => setEditDepense(null)} />}
       </Modal>
 
       <Modal open={addAction} onClose={() => setAddAction(false)} title={t('action.ajouter')}>
-        <ActionForm defaultSerreId={serre.id}
-          onSubmit={async (data) => { await actionService.create(data); setAddAction(false) }}
-          onCancel={() => setAddAction(false)}
-        />
+        <ActionForm defaultSerreId={serre.id} onSubmit={handleAddAction} onCancel={() => setAddAction(false)} />
       </Modal>
-
       <Modal open={!!editAction} onClose={() => setEditAction(null)} title={t('action.modifier')}>
-        {editAction && <ActionForm initial={editAction}
-          onSubmit={async (data) => { await actionService.update(editAction.id, data); setEditAction(null) }}
-          onCancel={() => setEditAction(null)}
-        />}
+        {editAction && <ActionForm initial={editAction} onSubmit={handleEditAction} onCancel={() => setEditAction(null)} />}
       </Modal>
 
       <Modal open={addIntrant} onClose={() => setAddIntrant(false)} title={t('intrant.ajouter')}>
-        <IntrantForm defaultSerreId={serre.id}
-          onSubmit={async (data) => { await intrantService.create(data); setAddIntrant(false) }}
-          onCancel={() => setAddIntrant(false)}
-        />
+        <IntrantForm defaultSerreId={serre.id} onSubmit={handleAddIntrant} onCancel={() => setAddIntrant(false)} />
       </Modal>
-
       <Modal open={!!editIntrant} onClose={() => setEditIntrant(null)} title={t('intrant.modifier')}>
-        {editIntrant && <IntrantForm initial={editIntrant}
-          onSubmit={async (data) => { await intrantService.update(editIntrant.id, data); setEditIntrant(null) }}
-          onCancel={() => setEditIntrant(null)}
-        />}
+        {editIntrant && <IntrantForm initial={editIntrant} onSubmit={handleEditIntrant} onCancel={() => setEditIntrant(null)} />}
       </Modal>
 
-      <ConfirmDialog
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDelete}
-        message={t('serre.confirmer_supprimer')}
-      />
-
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => {
-          if (!deleteTarget) return
-          if (deleteTarget.type === 'depense') await depenseService.delete(deleteTarget.id)
-          if (deleteTarget.type === 'action') await actionService.delete(deleteTarget.id)
-          if (deleteTarget.type === 'intrant') await intrantService.delete(deleteTarget.id)
-          setDeleteTarget(null)
-        }}
-      />
+      <ConfirmDialog open={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={handleDelete} message={t('serre.confirmer_supprimer')} />
+      <ConfirmDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteTarget} />
     </div>
   )
 }

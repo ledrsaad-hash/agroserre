@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
 import { db } from '@/db/database'
 import { venteService } from '@/services/venteService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { VenteCard } from '@/components/vente/VenteCard'
 import { VenteForm } from '@/components/vente/VenteForm'
@@ -19,15 +20,18 @@ export function Ventes() {
   const [open, setOpen] = useState(false)
 
   const ventes = useLiveQuery(() => db.ventes.orderBy('date').reverse().toArray(), []) ?? []
-
   const totalNet = ventes.reduce((s, v) => s + calculerVente(v).totalNet, 0)
 
   const handleCreate = async (data: VenteFormData) => {
     const repartitions = data.typeAffectation === 'mono_serre'
       ? [{ serreId: data.repartitions[0]?.serreId ?? data.serreIds[0], nombreRegimes: data.nombreRegimesTotal }]
       : data.repartitions
-    await venteService.create({ ...data, repartitions })
-    setOpen(false)
+    try {
+      await venteService.create({ ...data, repartitions })
+      setOpen(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
   }
 
   return (

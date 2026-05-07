@@ -1,6 +1,7 @@
+import { supabase } from '@/lib/supabase'
 import { db } from '@/db/database'
 import { nanoid } from '@/db/nanoid'
-import { remoteUpsert, remoteDelete } from '@/lib/remoteWriter'
+import { withTimeout, type PgResult } from '@/lib/pgTimeout'
 import type { Action, ActionFormData } from '@/types/action'
 
 const now = () => new Date().toISOString()
@@ -16,19 +17,49 @@ export const actionService = {
 
   async create(data: ActionFormData): Promise<Action> {
     const action: Action = { ...data, id: nanoid(), createdAt: now(), updatedAt: now() }
-    await db.actions.add(action)
-    void remoteUpsert('actions', action as unknown as Record<string, unknown>)
+    console.log('[Supabase] insert actions →', action)
+
+    const { data: inserted, error } = await withTimeout(
+      supabase.from('actions').insert(action).select().single() as PromiseLike<PgResult<Action>>
+    )
+    if (error) {
+      console.error('[Supabase] insert actions ÉCHEC', error)
+      throw new Error(error.message)
+    }
+    console.log('[Supabase] insert actions ✓', inserted)
+
+    await db.actions.put(action)
     return action
   },
 
   async update(id: string, data: Partial<ActionFormData>): Promise<void> {
-    await db.actions.update(id, { ...data, updatedAt: now() })
-    const full = await db.actions.get(id)
-    if (full) void remoteUpsert('actions', full as unknown as Record<string, unknown>)
+    const updates = { ...data, updatedAt: now() }
+    console.log('[Supabase] update actions →', id, updates)
+
+    const { error } = await withTimeout(
+      supabase.from('actions').update(updates).eq('id', id) as PromiseLike<PgResult>
+    )
+    if (error) {
+      console.error('[Supabase] update actions ÉCHEC', error)
+      throw new Error(error.message)
+    }
+    console.log('[Supabase] update actions ✓')
+
+    await db.actions.update(id, updates)
   },
 
   async delete(id: string): Promise<void> {
+    console.log('[Supabase] delete actions →', id)
+
+    const { error } = await withTimeout(
+      supabase.from('actions').delete().eq('id', id) as PromiseLike<PgResult>
+    )
+    if (error) {
+      console.error('[Supabase] delete actions ÉCHEC', error)
+      throw new Error(error.message)
+    }
+    console.log('[Supabase] delete actions ✓')
+
     await db.actions.delete(id)
-    void remoteDelete('actions', id)
   },
 }

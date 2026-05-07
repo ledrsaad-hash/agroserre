@@ -5,14 +5,14 @@ import { useForm } from 'react-hook-form'
 import { Trash2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { db } from '@/db/database'
 import { marcheService } from '@/services/marcheService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { formatDateShort } from '@/utils/formatters'
-import { todayISO } from '@/utils/formatters'
+import { formatDateShort, todayISO } from '@/utils/formatters'
 import type { PrixMarcheFormData } from '@/types/marche'
 
 export function Marche() {
@@ -26,8 +26,23 @@ export function Marche() {
   })
 
   const handleCreate = async (data: PrixMarcheFormData) => {
-    await marcheService.create({ ...data, prixKg: Number(data.prixKg) })
-    reset({ date: todayISO() })
+    try {
+      await marcheService.create({ ...data, prixKg: Number(data.prixKg) })
+      reset({ date: todayISO() })
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await marcheService.delete(deleteId)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    } finally {
+      setDeleteId(null)
+    }
   }
 
   const dernier = prix[0]
@@ -59,19 +74,9 @@ export function Marche() {
         <p className="font-bold text-gray-700 mb-4">{t('marche.ajouter')}</p>
         <form onSubmit={handleSubmit(handleCreate)} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label={t('common.date')}
-              type="date"
-              {...register('date', { required: true })}
-            />
-            <Input
-              label={t('marche.prixKg')}
-              type="number"
-              step="0.01"
-              min={0}
-              suffix="MAD"
-              {...register('prixKg', { required: true, valueAsNumber: true })}
-            />
+            <Input label={t('common.date')} type="date" {...register('date', { required: true })} />
+            <Input label={t('marche.prixKg')} type="number" step="0.01" min={0} suffix="MAD"
+              {...register('prixKg', { required: true, valueAsNumber: true })} />
           </div>
           <Input label={t('marche.marche')} {...register('marche')} />
           <Input label={t('common.note')} {...register('note')} />
@@ -114,11 +119,7 @@ export function Marche() {
         )}
       </div>
 
-      <ConfirmDialog
-        open={!!deleteId}
-        onClose={() => setDeleteId(null)}
-        onConfirm={async () => { if (deleteId) await marcheService.delete(deleteId); setDeleteId(null) }}
-      />
+      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} />
     </div>
   )
 }

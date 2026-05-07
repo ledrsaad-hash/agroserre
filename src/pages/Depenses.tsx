@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
 import { db } from '@/db/database'
 import { depenseService } from '@/services/depenseService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { DepenseItem } from '@/components/depense/DepenseItem'
 import { DepenseForm } from '@/components/depense/DepenseForm'
@@ -35,14 +36,33 @@ export function Depenses() {
   const total = filtered.reduce((s, d) => s + d.montant, 0)
 
   const handleCreate = async (data: DepenseFormData) => {
-    await depenseService.create({ ...data, serreId: data.serreId || null })
-    setOpen(false)
+    try {
+      await depenseService.create({ ...data, serreId: data.serreId || null })
+      setOpen(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
   }
 
   const handleEdit = async (data: DepenseFormData) => {
     if (!editItem) return
-    await depenseService.update(editItem.id, { ...data, serreId: data.serreId || null })
-    setEditItem(null)
+    try {
+      await depenseService.update(editItem.id, { ...data, serreId: data.serreId || null })
+      setEditItem(null)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await depenseService.delete(deleteId)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    } finally {
+      setDeleteId(null)
+    }
   }
 
   return (
@@ -114,11 +134,7 @@ export function Depenses() {
         {editItem && <DepenseForm initial={editItem} onSubmit={handleEdit} onCancel={() => setEditItem(null)} />}
       </Modal>
 
-      <ConfirmDialog
-        open={!!deleteId}
-        onClose={() => setDeleteId(null)}
-        onConfirm={async () => { if (deleteId) await depenseService.delete(deleteId); setDeleteId(null) }}
-      />
+      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
 import { db } from '@/db/database'
 import { serreService } from '@/services/serreService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { SerreCard } from '@/components/serre/SerreCard'
 import { SerreForm } from '@/components/serre/SerreForm'
@@ -18,8 +19,12 @@ export function Serres() {
   const serres = useLiveQuery(() => db.serres.orderBy('createdAt').reverse().toArray(), []) ?? []
 
   const handleCreate = async (data: SerreFormData) => {
-    await serreService.create(data)
-    setOpen(false)
+    try {
+      await serreService.create(data)
+      setOpen(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
   }
 
   return (

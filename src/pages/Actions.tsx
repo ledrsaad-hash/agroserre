@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
 import { db } from '@/db/database'
 import { actionService } from '@/services/actionService'
+import { emitSyncError } from '@/lib/syncErrors'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ActionItem } from '@/components/action/ActionItem'
 import { ActionForm } from '@/components/action/ActionForm'
@@ -32,14 +33,33 @@ export function Actions() {
   })
 
   const handleCreate = async (data: ActionFormData) => {
-    await actionService.create(data)
-    setOpen(false)
+    try {
+      await actionService.create(data)
+      setOpen(false)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de l\'enregistrement')
+    }
   }
 
   const handleEdit = async (data: ActionFormData) => {
     if (!editItem) return
-    await actionService.update(editItem.id, data)
-    setEditItem(null)
+    try {
+      await actionService.update(editItem.id, data)
+      setEditItem(null)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la modification')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteId) return
+    try {
+      await actionService.delete(deleteId)
+    } catch (e) {
+      emitSyncError(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    } finally {
+      setDeleteId(null)
+    }
   }
 
   return (
@@ -68,10 +88,7 @@ export function Actions() {
       ) : (
         <div className="space-y-3">
           {filtered.map(a => (
-            <ActionItem key={a.id} action={a}
-              onEdit={() => setEditItem(a)}
-              onDelete={() => setDeleteId(a.id)}
-            />
+            <ActionItem key={a.id} action={a} onEdit={() => setEditItem(a)} onDelete={() => setDeleteId(a.id)} />
           ))}
         </div>
       )}
@@ -82,9 +99,7 @@ export function Actions() {
       <Modal open={!!editItem} onClose={() => setEditItem(null)} title={t('action.modifier')}>
         {editItem && <ActionForm initial={editItem} onSubmit={handleEdit} onCancel={() => setEditItem(null)} />}
       </Modal>
-      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)}
-        onConfirm={async () => { if (deleteId) await actionService.delete(deleteId); setDeleteId(null) }}
-      />
+      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} />
     </div>
   )
 }
