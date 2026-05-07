@@ -17,18 +17,18 @@ export const depenseService = {
   async create(data: DepenseFormData): Promise<Depense> {
     const depense: Depense = { ...data, id: nanoid(), createdAt: now(), updatedAt: now() }
     await db.depenses.add(depense)
-    await remoteUpsert('depenses', depense as unknown as Record<string, unknown>)
+    void remoteUpsert('depenses', depense as unknown as Record<string, unknown>)
     return depense
   },
 
   async update(id: string, data: Partial<DepenseFormData>): Promise<void> {
     await db.depenses.update(id, { ...data, updatedAt: now() })
     const full = await db.depenses.get(id)
-    if (full) await remoteUpsert('depenses', full as unknown as Record<string, unknown>)
+    if (full) void remoteUpsert('depenses', full as unknown as Record<string, unknown>)
   },
 
   async delete(id: string): Promise<void> {
     await db.depenses.delete(id)
-    await remoteDelete('depenses', id)
+    void remoteDelete('depenses', id)
   },
 }

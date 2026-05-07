@@ -17,15 +17,14 @@ export const serreService = {
   async create(data: SerreFormData): Promise<Serre> {
     const serre: Serre = { ...data, id: nanoid(), createdAt: now(), updatedAt: now() }
     await db.serres.add(serre)
-    // remoteUpsert ne throw jamais — safe to await
-    await remoteUpsert('serres', serre as unknown as Record<string, unknown>)
+    void remoteUpsert('serres', serre as unknown as Record<string, unknown>)
     return serre
   },
 
   async update(id: string, data: Partial<SerreFormData>): Promise<void> {
     await db.serres.update(id, { ...data, updatedAt: now() })
     const full = await db.serres.get(id)
-    if (full) await remoteUpsert('serres', full as unknown as Record<string, unknown>)
+    if (full) void remoteUpsert('serres', full as unknown as Record<string, unknown>)
   },
 
   async delete(id: string): Promise<void> {
@@ -35,6 +34,6 @@ export const serreService = {
       await db.actions.where('serreId').equals(id).delete()
       await db.intrants.where('serreId').equals(id).delete()
     })
-    await remoteDelete('serres', id)
+    void remoteDelete('serres', id)
   },
 }

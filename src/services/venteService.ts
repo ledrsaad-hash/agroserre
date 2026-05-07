@@ -24,18 +24,18 @@ export const venteService = {
   async create(data: VenteFormData): Promise<Vente> {
     const vente: Vente = { ...data, id: nanoid(), createdAt: now(), updatedAt: now() }
     await db.ventes.add(vente)
-    await remoteUpsert('ventes', vente as unknown as Record<string, unknown>)
+    void remoteUpsert('ventes', vente as unknown as Record<string, unknown>)
     return vente
   },
 
   async update(id: string, data: Partial<VenteFormData>): Promise<void> {
     await db.ventes.update(id, { ...data, updatedAt: now() })
     const full = await db.ventes.get(id)
-    if (full) await remoteUpsert('ventes', full as unknown as Record<string, unknown>)
+    if (full) void remoteUpsert('ventes', full as unknown as Record<string, unknown>)
   },
 
   async delete(id: string): Promise<void> {
     await db.ventes.delete(id)
-    await remoteDelete('ventes', id)
+    void remoteDelete('ventes', id)
   },
 }

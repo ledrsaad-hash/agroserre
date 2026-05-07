@@ -17,18 +17,18 @@ export const intrantService = {
   async create(data: IntrantFormData): Promise<Intrant> {
     const intrant: Intrant = { ...data, id: nanoid(), createdAt: now(), updatedAt: now() }
     await db.intrants.add(intrant)
-    await remoteUpsert('intrants', intrant as unknown as Record<string, unknown>)
+    void remoteUpsert('intrants', intrant as unknown as Record<string, unknown>)
     return intrant
   },
 
   async update(id: string, data: Partial<IntrantFormData>): Promise<void> {
     await db.intrants.update(id, { ...data, updatedAt: now() })
     const full = await db.intrants.get(id)
-    if (full) await remoteUpsert('intrants', full as unknown as Record<string, unknown>)
+    if (full) void remoteUpsert('intrants', full as unknown as Record<string, unknown>)
   },
 
   async delete(id: string): Promise<void> {
     await db.intrants.delete(id)
-    await remoteDelete('intrants', id)
+    void remoteDelete('intrants', id)
   },
 }
